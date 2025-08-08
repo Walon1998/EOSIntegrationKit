@@ -47,6 +47,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="EOS Integration Kit|Voice Chat")
 	FString DisplayName;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="EOS Integration Kit|Voice Chat")
+	bool bIsSystemDefault = false;
 	
 };
 
@@ -60,7 +63,7 @@ public:
 	FString PlayerEOSVoiceChatName;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="EOS Integration Kit|Voice Chat")
-	AActor* PlayerActor = nullptr;
+	TObjectPtr<AActor> PlayerActor = nullptr;
 	
 };
 
