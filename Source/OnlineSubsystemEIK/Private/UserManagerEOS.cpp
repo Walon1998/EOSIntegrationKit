@@ -2601,11 +2601,27 @@ FString FUserManagerEOS::GetAuthType() const
 
 // IOnlineExternalUI Interface
 
-bool FUserManagerEOS::ShowLoginUI(const int ControllerIndex, bool bShowOnlineOnly, bool bShowSkipButton, const FOnLoginUIClosedDelegate& Delegate)
+bool FUserManagerEOS::ShowLoginUI(const int ControllerIndex, bool bShowOnlineOnly, bool bShowSkipButton, const FOnLoginUIClosedDelegate &Delegate)
 {
 	FPlatformEOSHelpersPtr EOSHelpers = EOSSubsystem->GetEOSHelpers();
-	EOSHelpers->PlatformTriggerLoginUI(EOSSubsystem, ControllerIndex, bShowOnlineOnly, bShowSkipButton, Delegate);
 
+	if (FUniqueNetIdPtr UniqueNetId = EOSSubsystem->UserManager->GetUniquePlayerId(ControllerIndex))
+	{
+		Delegate.ExecuteIfBound(UniqueNetId, ControllerIndex, FOnlineError::Success());
+		return true;
+	}
+
+	TSharedPtr<FDelegateHandle> DelegateHandle = MakeShared<FDelegateHandle>();
+
+	*DelegateHandle = EOSSubsystem->UserManager->AddOnLoginCompleteDelegate_Handle(ControllerIndex, FOnLoginCompleteDelegate::CreateLambda([this, DelegateHandle, Delegate](int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId &UserId, const FString &ErrorString)
+																																		   {
+			FOnlineError Error(bWasSuccessful);
+			Error.SetFromErrorCode(ErrorString);
+
+			Delegate.ExecuteIfBound(UserId.IsValid()? UserId.AsShared() : FUniqueNetIdPtr(), LocalUserNum, Error);
+
+			EOSSubsystem->UserManager->ClearOnLoginCompleteDelegate_Handle(LocalUserNum, *DelegateHandle); }));
+	EOSSubsystem->UserManager->Login(ControllerIndex, FOnlineAccountCredentials());
 	return true;
 }
 
