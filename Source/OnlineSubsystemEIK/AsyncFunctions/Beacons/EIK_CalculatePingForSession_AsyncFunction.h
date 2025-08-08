@@ -34,5 +34,5 @@ private:
 	FSessionFindStruct Var_SessionFindStruct;
 
 	UPROPERTY()
-	UObject* WorldContextObject;
+	TObjectPtr<UObject> WorldContextObject;
 };
